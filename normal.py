@@ -75,17 +75,6 @@ class Normal(object):
         sigma = np.cov(data, rowvar=0)
         return mu, sigma
 
-    def patch(self, axes, color = 'blue'):
-        """
-        Convenience function for plotting with matplotlib.
-        """
-
-        color = 'blue'
-        [u,s,v] = la.svd(self.E)
-        angle = np.arccos(np.dot(u[1],npa([1,0]))) * 180.0 / np.pi
-        ellipse = matplotlib.patches.Ellipse(self.mu, np.sqrt(s[1]), np.sqrt(s[0]), angle=angle, fill=False, ec=color)
-        axes.add_patch(ellipse)
-
     def marginalize(self, indices):
         """
         Creates a new marginal normal distribution for ''indices''.
@@ -123,42 +112,42 @@ class Normal(object):
         new_E = iAaa
         return Normal(len(odim), mu = new_mu, sigma = new_E)
 
-def show2dnormal(norm, data = None):
+def show2dnormal(norm, show = False):
+
+    # create a meshgrid centered at mu that takes into account the variance in x and y
+    delta = 0.025
+
+    lower_xlim = norm.mu[0] - (2.0 * norm.E[0,0])
+    upper_xlim = norm.mu[0] + (2.0 * norm.E[0,0])
+    lower_ylim = norm.mu[1] - (2.0 * norm.E[1,1])
+    upper_ylim = norm.mu[1] + (2.0 * norm.E[1,1])
+
+    x = np.arange(lower_xlim, upper_xlim, delta)
+    y = np.arange(lower_ylim, upper_ylim, delta)
+
+    X,Y = np.meshgrid(x,y)
+    Z = matplotlib.mlab.bivariate_normal(X, Y, sigmax=norm.E[0,0], sigmay=norm.E[1,1], mux=norm.mu[0], muy=norm.mu[1], sigmaxy=norm.E[0,1])
+
     # Plot the normalized faithful data points.
     fig = pylab.figure(num = 1, figsize=(4,4))
-    axes = fig.add_subplot(111)
+    pylab.contour(X,Y,Z)
 
-    if data:
-        xnorm = data[:,0]
-        ynorm = data[:,1]
-        axes.plot(xnorm,ynorm, '+')
-
-    norm.patch(axes)
-
-    pylab.draw()
-    pylab.show()
+    if show:
+        pylab.show()
 
 
 if __name__ == '__main__':
 
     # Tests for the ConditionalNormal class...
     mu = [0.1, 0.3]
-    sigma = [[0.2, 0.9], [0.9, 0.2]]
-
-    mu = [0.0, 0.0]
-    sigma = np.eye(2)
-
+    sigma = [[0.9, -0.2], [-0.2, 0.9]]
     n = Normal(2, mu = mu, sigma = sigma)
-    print n.mu
-    print n.E
-    print n.A
+    show2dnormal(n)
 
-    x = n.condition([1],[1.0])
-    print x.mu
-    print x.E
-    print x.A
+    mu = [100, 100]
+    sigma = np.eye(2)
+    n = Normal(2, mu = mu, sigma = sigma)
+    show2dnormal(n)
 
-    y = n.marginalize([0])
-    print y.mu
-    print y.E
-    print y.A
+
+    pylab.show()
