@@ -17,14 +17,17 @@ import pdb
 
 import matplotlib
 import pylab
+from matplotlib.ticker import NullFormatter
 
 class Normal(object):
     """
     A class for storing the parameters of a multivariate normal
     distribution.
+
+    cond : (parent, conditional value)
     """
 
-    def __init__(self, dim, mu = None, sigma = None, data = None):
+    def __init__(self, dim, mu = None, sigma = None, data = None, parent = None, cond = None):
 
         self.dim = dim # full data dimension
 
@@ -38,7 +41,11 @@ class Normal(object):
             mu = npr.randn(dim)
             sigma = np.eye(dim)
 
+        self.cond = cond
+        self.parent = parent
+
         self.update(npa(mu),npa(sigma))
+
 
     def update(self, mu, sigma):
         self.mu = mu
@@ -69,6 +76,12 @@ class Normal(object):
         fE = self.factor
 
         return np.exp(-0.5 * np.dot(np.dot(dx,A),dx)) / fE
+
+    def simulate(self, ndata = 100):
+        """
+        Draw pts from the distribution.
+        """
+        return npr.multivariate_normal(self.mu, self.E, ndata)
 
     def estimate(self, data):
         mu = np.mean(data, axis=0)
@@ -110,10 +123,12 @@ class Normal(object):
         new_mu = mua + np.dot(premu, (x - mub))
 
         new_E = iAaa
-        return Normal(len(odim), mu = new_mu, sigma = new_E)
+        return Normal(len(odim), mu = new_mu, sigma = new_E, cond = {'data' : x, 'indices' : indices}, parent = self)
 
-def show2dnormal(norm, show = False):
-
+def draw2dnormal(norm, show = False, axes = None):
+    """
+    Just draw a simple 2d normal pdf.
+    """
     # create a meshgrid centered at mu that takes into account the variance in x and y
     delta = 0.025
 
@@ -129,12 +144,53 @@ def show2dnormal(norm, show = False):
     Z = matplotlib.mlab.bivariate_normal(X, Y, sigmax=norm.E[0,0], sigmay=norm.E[1,1], mux=norm.mu[0], muy=norm.mu[1], sigmaxy=norm.E[0,1])
 
     # Plot the normalized faithful data points.
-    fig = pylab.figure(num = 1, figsize=(4,4))
-    pylab.contour(X,Y,Z)
+    if not axes:
+        fig = pylab.figure(num = 1, figsize=(4,4))
+        pylab.contour(X,Y,Z)
+
+    else:
+        axes.contour(X,Y,Z)
 
     if show:
         pylab.show()
 
+def draw1dnormal(norm, show = False, axes = None):
+    """
+    Just draw a simple 1d normal pdf. Used for plotting the conditionals in simple test cases.
+    """
+    delta = 0.025
+    mu = norm.mu[0]
+    sigma = norm.E[0,0]
+    lower_xlim = mu - (2.0 * sigma)
+    upper_xlim = mu + (2.0 * sigma)
+    x = np.arange(lower_xlim,upper_xlim, delta)
+    y = matplotlib.mlab.normpdf(x, mu, sigma)
+    if axes is None:
+        pylab.plot(x,y)
+    else:
+        axes.plot(y,x)
+
+    if show:
+        pylab.show()
+
+def draw2d1dnormal(norm, cnorm, show = False):
+
+    pylab.figure(1, figsize=(8,8))
+
+    nullfmt = NullFormatter()
+
+    rect_2d = [0.1, 0.1, 0.65, 0.65]
+    rect_1d = [0.1 + 0.65 + 0.02, 0.1, 0.2, 0.65]
+    ax2d = pylab.axes(rect_2d)
+    ax1d = pylab.axes(rect_1d)
+    ax1d.xaxis.set_major_formatter(nullfmt)
+    ax1d.yaxis.set_major_formatter(nullfmt)
+    draw2dnormal(norm, axes = ax2d)
+    draw1dnormal(cnorm, axes = ax1d)
+    y = ax2d.get_ylim()
+    x = [cnorm.cond['data'], cnorm.cond['data']]
+    ax2d.plot(x,y)
+    # draw a line at the condition pt.
 
 if __name__ == '__main__':
 
@@ -142,12 +198,21 @@ if __name__ == '__main__':
     mu = [0.1, 0.3]
     sigma = [[0.9, -0.2], [-0.2, 0.9]]
     n = Normal(2, mu = mu, sigma = sigma)
-    show2dnormal(n)
+    #draw2dnormal(n)
 
-    mu = [100, 100]
-    sigma = np.eye(2)
-    n = Normal(2, mu = mu, sigma = sigma)
-    show2dnormal(n)
+    # mu = [100, 100]
+    # sigma = np.eye(2)
+    # n = Normal(2, mu = mu, sigma = sigma)
+    # draw2dnormal(n)
 
+    data = n.simulate(1000)
+    #pylab.scatter(data[:,0],data[:,1])
+
+    # todo -- set up 2 plots (one for conditioned version of distribution)
+
+    newn = n.condition([0],0.0)
+    #draw1dnormal(newn)
+
+    draw2d1dnormal(n,newn)
 
     pylab.show()
