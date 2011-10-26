@@ -16,8 +16,9 @@ import sys
 import pdb
 
 import matplotlib
-import pylab
+import pylab as pl
 from matplotlib.ticker import NullFormatter
+from matplotlib.widgets import Slider
 
 class Normal(object):
     """
@@ -143,21 +144,28 @@ def draw2dnormal(norm, show = False, axes = None):
     X,Y = np.meshgrid(x,y)
     Z = matplotlib.mlab.bivariate_normal(X, Y, sigmax=norm.E[0,0], sigmay=norm.E[1,1], mux=norm.mu[0], muy=norm.mu[1], sigmaxy=norm.E[0,1])
 
+
+    minlim = min(lower_xlim, lower_ylim)
+    maxlim = max(upper_xlim, upper_ylim)
+
+
     # Plot the normalized faithful data points.
     if not axes:
-        fig = pylab.figure(num = 1, figsize=(4,4))
-        pylab.contour(X,Y,Z)
-
+        fig = pl.figure(num = 1, figsize=(4,4))
+        pl.contour(X,Y,Z)
+        axes.set_xlim(minlim,maxlim)
+        axes.set_ylim(minlim,maxlim)
     else:
         axes.contour(X,Y,Z)
+        axes.set_xlim(minlim,maxlim)
+        axes.set_ylim(minlim,maxlim)
+
+
 
     if show:
-        pylab.show()
+        pl.show()
 
-def draw1dnormal(norm, show = False, axes = None):
-    """
-    Just draw a simple 1d normal pdf. Used for plotting the conditionals in simple test cases.
-    """
+def evalpdf(norm):
     delta = 0.025
     mu = norm.mu[0]
     sigma = norm.E[0,0]
@@ -165,24 +173,31 @@ def draw1dnormal(norm, show = False, axes = None):
     upper_xlim = mu + (2.0 * sigma)
     x = np.arange(lower_xlim,upper_xlim, delta)
     y = matplotlib.mlab.normpdf(x, mu, sigma)
+    return x,y
+
+def draw1dnormal(norm, show = False, axes = None):
+    """
+    Just draw a simple 1d normal pdf. Used for plotting the conditionals in simple test cases.
+    """
+    x,y = evalpdf(norm)
     if axes is None:
-        pylab.plot(x,y)
+        pl.plot(x,y)
     else:
-        axes.plot(y,x)
+        return axes.plot(y,x)
 
     if show:
-        pylab.show()
+        pl.show()
 
 def draw2d1dnormal(norm, cnorm, show = False):
 
-    pylab.figure(1, figsize=(8,8))
+    pl.figure(1, figsize=(8,8))
 
     nullfmt = NullFormatter()
 
     rect_2d = [0.1, 0.1, 0.65, 0.65]
     rect_1d = [0.1 + 0.65 + 0.02, 0.1, 0.2, 0.65]
-    ax2d = pylab.axes(rect_2d)
-    ax1d = pylab.axes(rect_1d)
+    ax2d = pl.axes(rect_2d)
+    ax1d = pl.axes(rect_1d)
     ax1d.xaxis.set_major_formatter(nullfmt)
     ax1d.yaxis.set_major_formatter(nullfmt)
     draw2dnormal(norm, axes = ax2d)
@@ -190,13 +205,76 @@ def draw2d1dnormal(norm, cnorm, show = False):
     y = ax2d.get_ylim()
     x = [cnorm.cond['data'], cnorm.cond['data']]
     ax2d.plot(x,y)
-    # draw a line at the condition pt.
+
 
 if __name__ == '__main__':
 
+
+    def draw_slider_demo(norm):
+
+        
+        #pl.subplot(111)
+        fig = pl.figure(1, figsize=(8,8))
+        
+        nullfmt = NullFormatter()
+
+        cnorm = norm.condition([0],2.0)
+
+        #rect = [left, bottom, width, height]
+
+        rect_slide = [0.1, 0.85, 0.65 + 0.1, 0.05]
+        rect_2d = [0.1, 0.1, 0.65, 0.65]
+        rect_1d = [0.1 + 0.65 + 0.02, 0.1, 0.2, 0.65]
+        ax2d = pl.axes(rect_2d)
+        ax1d = pl.axes(rect_1d)
+        ax1d.xaxis.set_major_formatter(nullfmt)
+        ax1d.yaxis.set_major_formatter(nullfmt)
+        axslide = pl.axes(rect_slide)
+        slider = Slider(axslide, 'Cond', -4.0,4.0,valinit=2.0)
+        
+        draw2dnormal(norm, axes = ax2d)
+        l2, = draw1dnormal(cnorm, axes = ax1d)
+
+        y = ax2d.get_ylim()
+        x = [cnorm.cond['data'], cnorm.cond['data']]
+        l1, = ax2d.plot(x,y)
+
+        def update(val):
+            cnorm = norm.condition([0],val)
+            x = [cnorm.cond['data'], cnorm.cond['data']]
+            l1.set_xdata(x)
+            x,y = evalpdf(cnorm)
+            print cnorm
+            #print y
+            l2.set_xdata(y)
+            l2.set_ydata(x)
+            pl.draw()
+            
+
+        slider.on_changed(update)
+
+
+        return slider
+
+
+        # TODO: change the range of the slider to match the 2d normal
+
+        #pdb.set_trace()
+
+        
+        # def update(val):
+        #     print "test"
+        #     pl.draw()
+        #     l.set_xdata([val,val])
+
+
     # Tests for the ConditionalNormal class...
-    mu = [0.1, 0.3]
-    sigma = [[0.9, -0.2], [-0.2, 0.9]]
+    mu = [0.5, 0.5]
+    # rot = [[np.cos(np.pi / 4.0), -np.sin(np.pi / 4.0)],
+    #        [np.sin(np.pi / 4.0), np.cos(np.pi / 4.0)]]
+    sigma = [[1.0, 0.5], [0.5, 1.0]]
+    #sigma = np.dot(np.array(rot), np.array(sigma))
+    print sigma
     n = Normal(2, mu = mu, sigma = sigma)
     #draw2dnormal(n)
 
@@ -206,13 +284,12 @@ if __name__ == '__main__':
     # draw2dnormal(n)
 
     data = n.simulate(1000)
-    #pylab.scatter(data[:,0],data[:,1])
+    #pl.scatter(data[:,0],data[:,1])
 
-    # todo -- set up 2 plots (one for conditioned version of distribution)
-
-    newn = n.condition([0],0.0)
+    pdb.set_trace()
+    newn = n.condition([0],2.0)
     #draw1dnormal(newn)
 
-    draw2d1dnormal(n,newn)
-
-    pylab.show()
+    #draw2d1dnormal(n,newn)
+    sl = draw_slider_demo(n)
+    pl.show()
