@@ -18,10 +18,11 @@ class Normal(object):
     A class for storing the parameters of a multivariate normal
     distribution.
 
-    cond : (parent, conditional value)
+    cond : (parent, conditional value, conditional indices)
+    margin : (parent, marginal indices)
     """
 
-    def __init__(self, dim, mu = None, sigma = None, data = None, parent = None, cond = None):
+    def __init__(self, dim, mu = None, sigma = None, data = None, parent = None, cond = None, margin = None):
 
         self.dim = dim # full data dimension
 
@@ -36,6 +37,7 @@ class Normal(object):
             sigma = np.eye(dim)
 
         self.cond = cond
+        self.margin = margin
         self.parent = parent
 
         self.update(npa(mu),npa(sigma))
@@ -71,6 +73,18 @@ class Normal(object):
 
         return np.exp(-0.5 * np.dot(np.dot(dx,A),dx)) / fE
 
+    def pdf_mesh(self, x, y):
+        # for 2d meshgrids
+        # use matplotlib.mlab.bivariate_normal -- faster (vectorized)
+
+        z = np.zeros((len(y),len(x)))
+        
+        for (i,v) in enumerate(x):
+            for (j,w) in enumerate(y):
+                z[j,i] = self.pdf([v,w])
+        
+        return z
+
     def simulate(self, ndata = 100):
         """
         Draw pts from the distribution.
@@ -87,7 +101,7 @@ class Normal(object):
         Creates a new marginal normal distribution for ''indices''.
         """
         indices = npa(indices)
-        return Normal(len(indices), mu = self.mu[indices], sigma = self.E[ix(indices,indices)])
+        return Normal(len(indices), mu = self.mu[indices], sigma = self.E[ix(indices,indices)], margin = {'indices' : indices}, parent = self)
 
     def condition(self, indices, x):
         """
@@ -114,8 +128,10 @@ class Normal(object):
 
         mub = self.mu[idim]
         mua = self.mu[odim]
-        new_mu = mua + np.dot(premu, (x - mub))
+        new_mu = mua - np.dot(premu, (x - mub))
 
         new_E = iAaa
-        return Normal(len(odim), mu = new_mu, sigma = new_E, cond = {'data' : x, 'indices' : indices}, parent = self)
+        return Normal(len(odim), mu = new_mu, sigma = new_E,
+                      cond = {'data' : x, 'indices' : indices},
+                      parent = self)
 

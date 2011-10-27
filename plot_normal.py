@@ -33,19 +33,19 @@ def draw2dnormal(norm, show = False, axes = None):
     y = np.arange(lower_ylim, upper_ylim, delta)
 
     X,Y = np.meshgrid(x,y)
-    Z = matplotlib.mlab.bivariate_normal(X, Y, sigmax=norm.E[0,0], sigmay=norm.E[1,1], mux=norm.mu[0], muy=norm.mu[1], sigmaxy=norm.E[0,1])
 
+    # remember sqrts!
+    Z = matplotlib.mlab.bivariate_normal(X, Y, sigmax=np.sqrt(norm.E[0,0]), sigmay=np.sqrt(norm.E[1,1]), mux=norm.mu[0], muy=norm.mu[1], sigmaxy=norm.E[0,1])
 
     minlim = min(lower_xlim, lower_ylim)
     maxlim = max(upper_xlim, upper_ylim)
-
 
     # Plot the normalized faithful data points.
     if not axes:
         fig = pl.figure(num = 1, figsize=(4,4))
         pl.contour(X,Y,Z)
-        axes.set_xlim(minlim,maxlim)
-        axes.set_ylim(minlim,maxlim)
+        #axes.set_xlim(minlim,maxlim)
+        #axes.set_ylim(minlim,maxlim)
     else:
         axes.contour(X,Y,Z)
         axes.set_xlim(minlim,maxlim)
@@ -63,7 +63,7 @@ def evalpdf(norm):
     lower_xlim = mu - (2.0 * sigma)
     upper_xlim = mu + (2.0 * sigma)
     x = np.arange(lower_xlim,upper_xlim, delta)
-    y = matplotlib.mlab.normpdf(x, mu, sigma)
+    y = matplotlib.mlab.normpdf(x, mu, np.sqrt(sigma))
     return x,y
 
 def draw1dnormal(norm, show = False, axes = None):
@@ -139,9 +139,10 @@ def draw_slider_demo(norm):
     
     return slider
 
-# Tests for the ConditionalNormal class...
-mu = [1.5, 0.5]
-sigma = [[1.0, 0.5], [0.5, 1.0]]
-n = Normal(2, mu = mu, sigma = sigma)
-sl = draw_slider_demo(n)
-pl.show()
+if __name__ == '__main__':
+    # Tests for the ConditionalNormal class...
+    mu = [1.5, 0.5]
+    sigma = [[1.0, 0.5], [0.5, 1.0]]
+    n = Normal(2, mu = mu, sigma = sigma)
+    sl = draw_slider_demo(n)
+    pl.show()
