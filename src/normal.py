@@ -22,7 +22,44 @@ class Normal(object):
     margin : (parent, marginal indices)
     """
 
-    def __init__(self, dim, mu = None, sigma = None, data = None, parent = None, cond = None, margin = None):
+    def __init__(self, dim, mu = None, sigma = None, data = None,
+                 parent = None, cond = None, margin = None):
+        """
+        Initialize a normal distribution.
+
+        Parameters
+        ----------
+        dim : int
+            Number of dimensions (e.g. number of components in the mu parameter).
+        mu : array, optional
+            The mean of the normal distribution.
+        sigma : array, optional
+            The covariance matrix of the normal distribution.
+        data : array, optional
+            If provided, the parameters of the distribution will be estimated from the data. Rows are observations, columns are components.
+        parent : Normal, optional
+            A reference to a parent distribution that was marginalized or conditioned.
+        cond : dict, optional
+            A dict of parameters describing how the parent distribution was conditioned.
+        margin : dict, optional
+            A dict of parameters describing how the parent distribution was marginalized.
+
+        Examples
+        --------
+        >>> x = Normal(2,mu = np.array([0.1,0.7]), sigma = np.array([[ 0.6,  0.4], [ 0.4,  0.6]]))
+        >>> print x
+        [ 0.1  0.7]
+        [[ 0.6  0.4]
+        [ 0.4  0.6]]
+
+        To condition on a value (and index):
+        
+        >>> condx = x.condition([0],0.1)
+        >>> print condx
+        [ 0.7]
+        [[ 0.33333333]]
+        
+        """
 
         self.dim = dim # full data dimension
 

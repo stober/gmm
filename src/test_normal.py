@@ -27,13 +27,14 @@ if False:
     x = Normal(2, data=data)
     draw2dnormal(x,show=True,axes=pl.gca())
 
-if False:
+if True:
     x = Normal(2,mu = npa([0.1,0.7]), sigma = npa([[ 0.6,  0.4], [ 0.4,  0.6]]))
     #draw2dnormal(x,show=True)
+    print x
     new = x.condition([0],0.1)
     print new
 
-if True:
+if False:
 
     from randcov import gencov
     import numpy.random as npr
