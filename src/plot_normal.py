@@ -48,10 +48,8 @@ def draw2dnormal(norm, show = False, axes = None):
         #axes.set_ylim(minlim,maxlim)
     else:
         axes.contour(X,Y,Z)
-        axes.set_xlim(minlim,maxlim)
-        axes.set_ylim(minlim,maxlim)
-
-
+        #axes.set_xlim(minlim,maxlim)
+        #axes.set_ylim(minlim,maxlim)
 
     if show:
         pl.show()

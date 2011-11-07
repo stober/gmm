@@ -28,7 +28,15 @@ if False:
     draw2dnormal(x,show=True,axes=pl.gca())
 
 if True:
-    x = Normal(2,mu = npa([0.1,0.7]), sigma = npa([[ 0.6,  0.4], [ 0.4,  0.6]]))
+    x = Normal(2,mu = np.array([0.1,0.7]), sigma = np.array([[ 0.6,  0.4], [ 0.4,  0.6]]))
+    s = x.simulate()
+    draw2dnormal(x)
+    pl.scatter(s[:,0],s[:,1])
+    pl.show()
+    print s
+
+if False:
+    x = Normal(2,mu = np.array([0.1,0.7]), sigma = np.array([[ 0.6,  0.4], [ 0.4,  0.6]]))
     #draw2dnormal(x,show=True)
     print x
     new = x.condition([0],0.1)

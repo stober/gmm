@@ -16,7 +16,7 @@ npa = np.array
 import sys; sys.path.append('.')
 import pdb
 
-import matplotlib
+#import matplotlib
 import pylab
 from normal import Normal
 
@@ -143,7 +143,7 @@ class GMM(object):
             new_priors.append(prior * marginal_comps[i].pdf(x))
         new_priors = npa(new_priors) / np.sum(new_priors)
 
-        params = {'ncomps' : self.ncomps, 'comps' : marginal_comps,
+        params = {'ncomps' : self.ncomps, 'comps' : condition_comps,
                   'priors' : new_priors, 'dim' : marginal_comps[0].dim}
 
         return GMM(params = params)

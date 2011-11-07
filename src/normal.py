@@ -16,10 +16,8 @@ ix  = np.ix_ # urgh - sometimes numpy is ugly!
 class Normal(object):
     """
     A class for storing the parameters of a multivariate normal
-    distribution.
-
-    cond : (parent, conditional value, conditional indices)
-    margin : (parent, marginal indices)
+    distribution. Supports evaluation, sampling, conditioning and
+    marginalization.
     """
 
     def __init__(self, dim, mu = None, sigma = None, data = None,
@@ -81,6 +79,32 @@ class Normal(object):
 
 
     def update(self, mu, sigma):
+        """
+        Update the distribution with new parameters.
+
+        Parameters
+        ----------
+        mu : array
+            The new mean parameters.
+        sigma : array
+            The new covariance matrix.
+
+        Example
+        -------
+
+        >>> x = Normal(2,mu = np.array([0.1,0.7]), sigma = np.array([[ 0.6,  0.4], [ 0.4,  0.6]]))
+        >>> print x
+        [ 0.1  0.7]
+        [[ 0.6  0.4]
+        [ 0.4  0.6]]
+
+        >>> x.update(np.array([0.0,0.0]), x.E)
+        >>> print x
+        [ 0.0  0.0]
+        [[ 0.6  0.4]
+        [ 0.4  0.6]]
+        """
+
         self.mu = mu
         self.E = sigma
 
