@@ -14,7 +14,6 @@ from gmm import GMM
 from plot_normal import draw2dnormal
 from plot_gmm import draw2dgmm
 
-
 if False:
     fp = open("../data/faithful.txt")
     data = []
