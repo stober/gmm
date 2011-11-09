@@ -11,10 +11,10 @@ data.
 
 Example code for the GMM and Normal classes can be found in the
 src/test_*.py files. The GMM and the underlying Normal class both
-support conditioning on data and marginalization for any subset of
-components. This makes this implementation ideal for experimenting
-with Gaussian Mixture Regression. For example, the following code
-learns the cosine function:
+support conditioning on data and marginalization for any subset of the
+variables. This makes this implementation ideal for experimenting with
+Gaussian Mixture Regression. For example, the following code learns
+the cosine function:
 
 
 import numpy as np
